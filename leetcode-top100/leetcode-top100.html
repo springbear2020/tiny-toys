@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode Top100 刷题器</title>
+    <link rel="icon" href="./leetcode.cn.ico">
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
+    <script>
+        // Tailwind自定义配置
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        dark: '#1f2937',
+                        light: '#f3f4f6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- 页面标题 -->
+    <header class="text-center mb-8">
+        <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2">
+            <i class="fa-solid fa-code text-primary mr-2"></i>LeetCode Top100 刷题器
+        </h1>
+        <p class="text-gray-600">按批次随机刷题，完成 100 道解锁下一批</p>
+    </header>
+
+    <!-- 进度信息 -->
+    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+            <div class="text-lg font-semibold">
+                当前批次：<span id="currentBatch" class="text-primary text-xl"></span>
+            </div>
+            <div class="text-lg font-semibold">
+                刷题进度：<span id="progressText" class="text-success text-xl"></span>
+            </div>
+            <button id="resetBtn"
+                    class="bg-danger text-white px-4 py-2 rounded-lg hover:bg-danger/90 transition-colors">
+                <i class="fa-solid fa-arrows-rotate mr-1"></i>重置刷题数据
+            </button>
+        </div>
+        <!-- 进度条 -->
+        <div class="w-full bg-gray-200 rounded-full h-3">
+            <div id="progressBar" class="bg-success h-3 rounded-full transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- 当前题目区域 -->
+    <div id="problemCard" class="bg-white rounded-xl p-6 card-shadow mb-8">
+        <div class="mb-4">
+            <span id="problemDifficulty" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+            <span id="problemId" class="ml-2 text-gray-500"></span>
+        </div>
+        <h2 id="problemTitle" class="text-xl font-bold mb-4 text-dark"></h2>
+        <a id="problemLink" target="_blank" class="inline-block text-primary hover:underline mb-6">
+            <i class="fa-solid fa-link mr-1"></i>打开题目链接
+        </a>
+        <div class="flex gap-4">
+            <button id="completeBtn"
+                    class="flex-1 bg-success text-white px-6 py-3 rounded-lg hover:bg-success/90 transition-colors text-lg font-medium">
+                <i class="fa-solid fa-check mr-2"></i>标记为已完成
+            </button>
+        </div>
+    </div>
+
+    <!-- 已完成题目列表 -->
+    <div class="bg-white rounded-xl p-6 card-shadow">
+        <h3 class="text-lg font-bold mb-4 flex items-center">
+            <i class="fa-solid fa-list-check text-success mr-2"></i>最近已完成
+        </h3>
+        <div id="completedList" class="max-h-96 overflow-y-auto space-y-2">
+            <p class="text-gray-500 text-center py-4">暂无完成题目</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===================== 1. LeetCode Top100 数据源 =====================
+    const LEETCODE_TOP100 = [{"id":1,"title":"两数之和","difficulty":"简单","url":"https://leetcode.cn/problems/two-sum/"},{"id":49,"title":"字母异位词分组","difficulty":"中等","url":"https://leetcode.cn/problems/group-anagrams/"},{"id":128,"title":"最长连续序列","difficulty":"中等","url":"https://leetcode.cn/problems/longest-consecutive-sequence/"},{"id":283,"title":"移动零","difficulty":"简单","url":"https://leetcode.cn/problems/move-zeroes/"},{"id":11,"title":"盛最多水的容器","difficulty":"中等","url":"https://leetcode.cn/problems/container-with-most-water/"},{"id":15,"title":"三数之和","difficulty":"中等","url":"https://leetcode.cn/problems/3sum/"},{"id":42,"title":"接雨水","difficulty":"困难","url":"https://leetcode.cn/problems/trapping-rain-water/"},{"id":3,"title":"无重复字符的最长子串","difficulty":"中等","url":"https://leetcode.cn/problems/longest-substring-without-repeating-characters/"},{"id":438,"title":"找到字符串中所有字母异位词","difficulty":"中等","url":"https://leetcode.cn/problems/find-all-anagrams-in-a-string/"},{"id":560,"title":"和为 K 的子数组","difficulty":"中等","url":"https://leetcode.cn/problems/subarray-sum-equals-k/"},{"id":239,"title":"滑动窗口最大值","difficulty":"困难","url":"https://leetcode.cn/problems/sliding-window-maximum/"},{"id":76,"title":"最小覆盖子串","difficulty":"困难","url":"https://leetcode.cn/problems/minimum-window-substring/"},{"id":53,"title":"最大子数组和","difficulty":"中等","url":"https://leetcode.cn/problems/maximum-subarray/"},{"id":56,"title":"合并区间","difficulty":"中等","url":"https://leetcode.cn/problems/merge-intervals/"},{"id":189,"title":"轮转数组","difficulty":"中等","url":"https://leetcode.cn/problems/rotate-array/"},{"id":238,"title":"除了自身以外数组的乘积","difficulty":"中等","url":"https://leetcode.cn/problems/product-of-array-except-self/"},{"id":41,"title":"缺失的第一个正数","difficulty":"困难","url":"https://leetcode.cn/problems/first-missing-positive/"},{"id":73,"title":"矩阵置零","difficulty":"中等","url":"https://leetcode.cn/problems/set-matrix-zeroes/"},{"id":54,"title":"螺旋矩阵","difficulty":"中等","url":"https://leetcode.cn/problems/spiral-matrix/"},{"id":48,"title":"旋转图像","difficulty":"中等","url":"https://leetcode.cn/problems/rotate-image/"},{"id":240,"title":"搜索二维矩阵 II","difficulty":"中等","url":"https://leetcode.cn/problems/search-a-2d-matrix-ii/"},{"id":160,"title":"相交链表","difficulty":"简单","url":"https://leetcode.cn/problems/intersection-of-two-linked-lists/"},{"id":206,"title":"反转链表","difficulty":"简单","url":"https://leetcode.cn/problems/reverse-linked-list/"},{"id":234,"title":"回文链表","difficulty":"简单","url":"https://leetcode.cn/problems/palindrome-linked-list/"},{"id":141,"title":"环形链表","difficulty":"简单","url":"https://leetcode.cn/problems/linked-list-cycle/"},{"id":142,"title":"环形链表 II","difficulty":"中等","url":"https://leetcode.cn/problems/linked-list-cycle-ii/"},{"id":21,"title":"合并两个有序链表","difficulty":"简单","url":"https://leetcode.cn/problems/merge-two-sorted-lists/"},{"id":2,"title":"两数相加","difficulty":"中等","url":"https://leetcode.cn/problems/add-two-numbers/"},{"id":19,"title":"删除链表的倒数第 N 个结点","difficulty":"中等","url":"https://leetcode.cn/problems/remove-nth-node-from-end-of-list/"},{"id":24,"title":"两两交换链表中的节点","difficulty":"中等","url":"https://leetcode.cn/problems/swap-nodes-in-pairs/"},{"id":25,"title":"K 个一组翻转链表","difficulty":"困难","url":"https://leetcode.cn/problems/reverse-nodes-in-k-group/"},{"id":138,"title":"随机链表的复制","difficulty":"中等","url":"https://leetcode.cn/problems/copy-list-with-random-pointer/"},{"id":148,"title":"排序链表","difficulty":"中等","url":"https://leetcode.cn/problems/sort-list/"},{"id":23,"title":"合并 K 个升序链表","difficulty":"困难","url":"https://leetcode.cn/problems/merge-k-sorted-lists/"},{"id":146,"title":"LRU 缓存","difficulty":"中等","url":"https://leetcode.cn/problems/lru-cache/"},{"id":94,"title":"二叉树的中序遍历","difficulty":"简单","url":"https://leetcode.cn/problems/binary-tree-inorder-traversal/"},{"id":104,"title":"二叉树的最大深度","difficulty":"简单","url":"https://leetcode.cn/problems/maximum-depth-of-binary-tree/"},{"id":226,"title":"翻转二叉树","difficulty":"简单","url":"https://leetcode.cn/problems/invert-binary-tree/"},{"id":101,"title":"对称二叉树","difficulty":"简单","url":"https://leetcode.cn/problems/symmetric-tree/"},{"id":543,"title":"二叉树的直径","difficulty":"简单","url":"https://leetcode.cn/problems/diameter-of-binary-tree/"},{"id":102,"title":"二叉树的层序遍历","difficulty":"中等","url":"https://leetcode.cn/problems/binary-tree-level-order-traversal/"},{"id":108,"title":"将有序数组转换为二叉搜索树","difficulty":"简单","url":"https://leetcode.cn/problems/convert-sorted-array-to-binary-search-tree/"},{"id":98,"title":"验证二叉搜索树","difficulty":"中等","url":"https://leetcode.cn/problems/validate-binary-search-tree/"},{"id":230,"title":"二叉搜索树中第 K 小的元素","difficulty":"中等","url":"https://leetcode.cn/problems/kth-smallest-element-in-a-bst/"},{"id":199,"title":"二叉树的右视图","difficulty":"中等","url":"https://leetcode.cn/problems/binary-tree-right-side-view/"},{"id":114,"title":"二叉树展开为链表","difficulty":"中等","url":"https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/"},{"id":105,"title":"从前序与中序遍历序列构造二叉树","difficulty":"中等","url":"https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal/"},{"id":437,"title":"路径总和 III","difficulty":"中等","url":"https://leetcode.cn/problems/path-sum-iii/"},{"id":236,"title":"二叉树的最近公共祖先","difficulty":"中等","url":"https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/"},{"id":124,"title":"二叉树中的最大路径和","difficulty":"困难","url":"https://leetcode.cn/problems/binary-tree-maximum-path-sum/"},{"id":200,"title":"岛屿数量","difficulty":"中等","url":"https://leetcode.cn/problems/number-of-islands/"},{"id":994,"title":"腐烂的橘子","difficulty":"中等","url":"https://leetcode.cn/problems/rotting-oranges/"},{"id":207,"title":"课程表","difficulty":"中等","url":"https://leetcode.cn/problems/course-schedule/"},{"id":208,"title":"实现 Trie (前缀树)","difficulty":"中等","url":"https://leetcode.cn/problems/implement-trie-prefix-tree/"},{"id":46,"title":"全排列","difficulty":"中等","url":"https://leetcode.cn/problems/permutations/"},{"id":78,"title":"子集","difficulty":"中等","url":"https://leetcode.cn/problems/subsets/"},{"id":17,"title":"电话号码的字母组合","difficulty":"中等","url":"https://leetcode.cn/problems/letter-combinations-of-a-phone-number/"},{"id":39,"title":"组合总和","difficulty":"中等","url":"https://leetcode.cn/problems/combination-sum/"},{"id":22,"title":"括号生成","difficulty":"中等","url":"https://leetcode.cn/problems/generate-parentheses/"},{"id":79,"title":"单词搜索","difficulty":"中等","url":"https://leetcode.cn/problems/word-search/"},{"id":131,"title":"分割回文串","difficulty":"中等","url":"https://leetcode.cn/problems/palindrome-partitioning/"},{"id":51,"title":"N 皇后","difficulty":"困难","url":"https://leetcode.cn/problems/n-queens/"},{"id":35,"title":"搜索插入位置","difficulty":"简单","url":"https://leetcode.cn/problems/search-insert-position/"},{"id":74,"title":"搜索二维矩阵","difficulty":"中等","url":"https://leetcode.cn/problems/search-a-2d-matrix/"},{"id":34,"title":"在排序数组中查找元素的第一个和最后一个位置","difficulty":"中等","url":"https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/"},{"id":33,"title":"搜索旋转排序数组","difficulty":"中等","url":"https://leetcode.cn/problems/search-in-rotated-sorted-array/"},{"id":153,"title":"寻找旋转排序数组中的最小值","difficulty":"中等","url":"https://leetcode.cn/problems/find-minimum-in-rotated-sorted-array/"},{"id":4,"title":"寻找两个正序数组的中位数","difficulty":"困难","url":"https://leetcode.cn/problems/median-of-two-sorted-arrays/"},{"id":20,"title":"有效的括号","difficulty":"简单","url":"https://leetcode.cn/problems/valid-parentheses/"},{"id":155,"title":"最小栈","difficulty":"中等","url":"https://leetcode.cn/problems/min-stack/"},{"id":394,"title":"字符串解码","difficulty":"中等","url":"https://leetcode.cn/problems/decode-string/"},{"id":739,"title":"每日温度","difficulty":"中等","url":"https://leetcode.cn/problems/daily-temperatures/"},{"id":84,"title":"柱状图中最大的矩形","difficulty":"困难","url":"https://leetcode.cn/problems/largest-rectangle-in-histogram/"},{"id":215,"title":"数组中的第K个最大元素","difficulty":"中等","url":"https://leetcode.cn/problems/kth-largest-element-in-an-array/"},{"id":347,"title":"前 K 个高频元素","difficulty":"中等","url":"https://leetcode.cn/problems/top-k-frequent-elements/"},{"id":295,"title":"数据流的中位数","difficulty":"困难","url":"https://leetcode.cn/problems/find-median-from-data-stream/"},{"id":121,"title":"买卖股票的最佳时机","difficulty":"简单","url":"https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/"},{"id":55,"title":"跳跃游戏","difficulty":"中等","url":"https://leetcode.cn/problems/jump-game/"},{"id":45,"title":"跳跃游戏 II","difficulty":"中等","url":"https://leetcode.cn/problems/jump-game-ii/"},{"id":763,"title":"划分字母区间","difficulty":"中等","url":"https://leetcode.cn/problems/partition-labels/"},{"id":70,"title":"爬楼梯","difficulty":"简单","url":"https://leetcode.cn/problems/climbing-stairs/"},{"id":118,"title":"杨辉三角","difficulty":"简单","url":"https://leetcode.cn/problems/pascals-triangle/"},{"id":198,"title":"打家劫舍","difficulty":"中等","url":"https://leetcode.cn/problems/house-robber/"},{"id":279,"title":"完全平方数","difficulty":"中等","url":"https://leetcode.cn/problems/perfect-squares/"},{"id":322,"title":"零钱兑换","difficulty":"中等","url":"https://leetcode.cn/problems/coin-change/"},{"id":139,"title":"单词拆分","difficulty":"中等","url":"https://leetcode.cn/problems/word-break/"},{"id":300,"title":"最长递增子序列","difficulty":"中等","url":"https://leetcode.cn/problems/longest-increasing-subsequence/"},{"id":152,"title":"乘积最大子数组","difficulty":"中等","url":"https://leetcode.cn/problems/maximum-product-subarray/"},{"id":416,"title":"分割等和子集","difficulty":"中等","url":"https://leetcode.cn/problems/partition-equal-subset-sum/"},{"id":32,"title":"最长有效括号","difficulty":"困难","url":"https://leetcode.cn/problems/longest-valid-parentheses/"},{"id":62,"title":"不同路径","difficulty":"中等","url":"https://leetcode.cn/problems/unique-paths/"},{"id":64,"title":"最小路径和","difficulty":"中等","url":"https://leetcode.cn/problems/minimum-path-sum/"},{"id":5,"title":"最长回文子串","difficulty":"中等","url":"https://leetcode.cn/problems/longest-palindromic-substring/"},{"id":1143,"title":"最长公共子序列","difficulty":"中等","url":"https://leetcode.cn/problems/longest-common-subsequence/"},{"id":72,"title":"编辑距离","difficulty":"中等","url":"https://leetcode.cn/problems/edit-distance/"},{"id":136,"title":"只出现一次的数字","difficulty":"简单","url":"https://leetcode.cn/problems/single-number/"},{"id":169,"title":"多数元素","difficulty":"简单","url":"https://leetcode.cn/problems/majority-element/"},{"id":75,"title":"颜色分类","difficulty":"中等","url":"https://leetcode.cn/problems/sort-colors/"},{"id":31,"title":"下一个排列","difficulty":"中等","url":"https://leetcode.cn/problems/next-permutation/"},{"id":287,"title":"寻找重复数","difficulty":"中等","url":"https://leetcode.cn/problems/find-the-duplicate-number/"}];
+
+    // ===================== 2. 本地存储工具类 =====================
+    const Storage = {
+        // 存储键名
+        KEYS: {
+            CURRENT_BATCH: 'lc_current_batch',
+            BATCH_QUESTIONS: 'lc_batch_questions', // 当前批次的题目ID列表（随机乱序）
+            FINISHED_RECORDS: 'lc_finished_records' // 完成记录 { [题ID]: { completed: boolean, time: 时间戳 } }
+        },
+
+        // 获取存储数据
+        get(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        },
+
+        // 保存数据
+        set(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        },
+
+        // 清空所有刷题数据
+        clear() {
+            Object.values(this.KEYS).forEach(key => localStorage.removeItem(key));
+        },
+
+        // 初始化默认数据
+        initDefault() {
+            if (!this.get(this.KEYS.CURRENT_BATCH)) {
+                this.set(this.KEYS.CURRENT_BATCH, 1);
+            }
+            if (!this.get(this.KEYS.FINISHED_RECORDS)) {
+                this.set(this.KEYS.FINISHED_RECORDS, {});
+            }
+        }
+    };
+
+    // ===================== 3. 核心工具函数 =====================
+    // Fisher-Yates 洗牌算法（随机打乱数组，保证公平随机）
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // 获取当前批次的题目列表（没有则生成随机乱序的100道）
+    function getCurrentBatchQuestions() {
+        let batchQuestions = Storage.get(Storage.KEYS.BATCH_QUESTIONS);
+        if (!batchQuestions) {
+            // 首次生成：随机打乱所有100道题
+            const allProblemIds = LEETCODE_TOP100.map(item => item.id);
+            batchQuestions = shuffleArray(allProblemIds);
+            Storage.set(Storage.KEYS.BATCH_QUESTIONS, batchQuestions);
+        }
+        return batchQuestions;
+    }
+
+    // 获取当前未完成的第一道题
+    function getCurrentUnfinishedProblem() {
+        const batchQuestions = getCurrentBatchQuestions();
+        const finishedRecords = Storage.get(Storage.KEYS.FINISHED_RECORDS) || {};
+
+        // 遍历批次题目，找到第一个未完成的
+        for (const id of batchQuestions) {
+            if (!finishedRecords[id]?.completed) {
+                return LEETCODE_TOP100.find(item => item.id === id);
+            }
+        }
+        return null; // 全部完成
+    }
+
+    // 进入下一批次
+    function nextBatch() {
+        const currentBatch = Storage.get(Storage.KEYS.CURRENT_BATCH);
+        // 更新批次号
+        Storage.set(Storage.KEYS.CURRENT_BATCH, currentBatch + 1);
+        // 重新生成随机题目列表
+        const allProblemIds = LEETCODE_TOP100.map(item => item.id);
+        const newBatchQuestions = shuffleArray(allProblemIds);
+        Storage.set(Storage.KEYS.BATCH_QUESTIONS, newBatchQuestions);
+        // 清空完成记录
+        Storage.set(Storage.KEYS.FINISHED_RECORDS, {});
+        alert('🎉 恭喜！当前批次100道题全部完成，已解锁下一批次！');
+        window.location.reload();
+    }
+
+    // 标记题目为已完成
+    function completeProblem(problemId) {
+        const finishedRecords = Storage.get(Storage.KEYS.FINISHED_RECORDS) || {};
+        finishedRecords[problemId] = {
+            completed: true,
+            time: new Date().getTime() // 记录完成时间戳
+        };
+        Storage.set(Storage.KEYS.FINISHED_RECORDS, finishedRecords);
+    }
+
+    // ===================== 4. 页面渲染函数 =====================
+    // 渲染进度信息
+    function renderProgress() {
+        const currentBatch = Storage.get(Storage.KEYS.CURRENT_BATCH);
+        const batchQuestions = getCurrentBatchQuestions();
+        const finishedRecords = Storage.get(Storage.KEYS.FINISHED_RECORDS) || {};
+
+        // 计算已完成数量
+        const finishedCount = Object.values(finishedRecords).filter(item => item.completed).length;
+        const totalCount = batchQuestions.length;
+        const progress = (finishedCount / totalCount) * 100;
+
+        // 更新DOM
+        document.getElementById('currentBatch').textContent = currentBatch;
+        document.getElementById('progressText').textContent = `${finishedCount}/${totalCount}`;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+    }
+
+    // 渲染当前题目
+    function renderCurrentProblem() {
+        const problem = getCurrentUnfinishedProblem();
+        const completeBtn = document.getElementById('completeBtn');
+        const problemCard = document.getElementById('problemCard');
+
+        if (!problem) {
+            // 批次完成，隐藏题目，显示提示
+            problemCard.innerHTML = `
+          <div class="text-center py-8">
+            <i class="fa-solid fa-trophy text-warning text-5xl mb-4"></i>
+            <h2 class="text-2xl font-bold text-dark mb-2">恭喜！本批次 100 道题全部完成！</h2>
+            <p class="text-gray-600 mb-6">点击下方按钮进入下一批次</p>
+            <button id="nextBatchBtn" class="bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors">
+              进入下一批次
+            </button>
+          </div>
+        `;
+            // 绑定下一批次按钮事件
+            document.getElementById('nextBatchBtn').addEventListener('click', nextBatch);
+            return;
+        }
+
+        // 渲染题目信息
+        document.getElementById('problemId').textContent = `题号：${problem.id}`;
+        document.getElementById('problemTitle').textContent = problem.title;
+        document.getElementById('problemLink').href = problem.url;
+
+        // 难度标签样式
+        const difficultyEl = document.getElementById('problemDifficulty');
+        difficultyEl.textContent = problem.difficulty;
+        switch (problem.difficulty) {
+            case '简单':
+                difficultyEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800';
+                break;
+            case '中等':
+                difficultyEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800';
+                break;
+            case '困难':
+                difficultyEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+                break;
+        }
+
+        // 绑定完成按钮事件
+        completeBtn.onclick = () => {
+            completeProblem(problem.id);
+            renderProgress();
+            renderCurrentProblem();
+            renderCompletedList();
+        };
+    }
+
+    // 渲染已完成题目列表
+    function renderCompletedList() {
+        const completedListEl = document.getElementById('completedList');
+        const batchQuestions = getCurrentBatchQuestions();
+        const finishedRecords = Storage.get(Storage.KEYS.FINISHED_RECORDS) || {};
+
+        // 筛选已完成的题目
+        const completedProblems = batchQuestions
+            .filter(id => finishedRecords[id]?.completed)
+            .map(id => {
+                const problem = LEETCODE_TOP100.find(item => item.id === id);
+                return {...problem, ...finishedRecords[id]};
+            })
+            .sort((a, b) => b.time - a.time); // 按完成时间倒序
+
+        if (completedProblems.length === 0) {
+            completedListEl.innerHTML = '<p class="text-gray-500 text-center py-4">暂无完成题目</p>';
+            return;
+        }
+
+        // 渲染列表
+        completedListEl.innerHTML = completedProblems.map(item => `
+        <div class="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+          <div>
+            <span class="font-medium">${item.id}. ${item.title}</span>
+            <span class="ml-2 text-xs px-2 py-0.5 rounded ${
+            item.difficulty === '简单' ? 'bg-green-100 text-green-800' :
+                item.difficulty === '中等' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+        }">${item.difficulty}</span>
+          </div>
+          <span class="text-xs text-gray-500">${new Date(item.time).toLocaleString()}</span>
+        </div>
+      `).join('');
+    }
+
+    // ===================== 5. 初始化应用 =====================
+    function initApp() {
+        // 初始化本地存储
+        Storage.initDefault();
+        // 渲染所有模块
+        renderProgress();
+        renderCurrentProblem();
+        renderCompletedList();
+        // 绑定重置按钮事件
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('⚠️ 确定要重置所有刷题数据吗？此操作不可恢复！')) {
+                Storage.clear();
+                location.reload();
+            }
+        });
+    }
+
+    // 页面加载完成后初始化
+    window.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>

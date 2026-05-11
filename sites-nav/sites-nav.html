@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精品网址导航 - 发现优质网站</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="./sites-nav.png">
+    <!-- Tailwind自定义配置 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        dark: '#0F172A',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'scale-up': 'scaleUp 0.2s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {'0%': {opacity: '0'}, '100%': {opacity: '1'}},
+                        scaleUp: {'0%': {transform: 'scale(0.95)'}, '100%': {transform: 'scale(1)'}}
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .card-hover {
+                @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/20;
+            }
+
+            .tab-active {
+                @apply border-b-2 border-primary text-primary font-medium;
+            }
+
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* 新增：主题图标过渡 */
+            .theme-icon {
+                @apply transition-all duration-300 ease-in-out;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light dark:bg-dark text-gray-800 dark:text-gray-200 min-h-screen flex flex-col transition-colors duration-300">
+<!-- 顶部导航栏 -->
+<header class="sticky top-0 z-50 bg-white/90 dark:bg-dark/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+        <!-- Logo区域 -->
+        <div class="flex items-center gap-2">
+            <i class="fa fa-compass text-primary text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-tight">精品网址导航</h1>
+        </div>
+
+        <!-- 功能按钮区 -->
+        <div class="flex items-center gap-3">
+            <button id="searchBtn"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <i class="fa fa-search text-gray-500 dark:text-gray-400"></i>
+                <span class="hidden sm:inline text-sm">搜索</span>
+                <kbd class="hidden md:inline px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">Ctrl+K</kbd>
+            </button>
+            <button id="themeToggle"
+                    class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <i class="fa-solid fa-moon theme-icon dark:hidden text-gray-500"></i>
+                <i class="fa-solid fa-sun theme-icon hidden dark:inline text-yellow-400"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- 搜索模态框 -->
+<div id="searchModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+    <div class="container mx-auto px-4 pt-20 max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden animate-scale-up">
+            <!-- 搜索输入框 -->
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="relative">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input
+                            id="searchInput"
+                            type="text"
+                            placeholder="搜索网站名称、描述..."
+                            class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary"
+                    >
+                    <button id="closeSearch"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- 搜索结果列表 -->
+            <div id="searchResults" class="max-h-[60vh] overflow-y-auto p-2 space-y-1">
+                <div class="text-center text-gray-400 py-10">输入关键词开始搜索</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 主体内容 -->
+<main class="flex-1 container mx-auto px-4 py-8">
+    <!-- 骨架屏加载 -->
+    <div id="skeleton" class="space-y-6">
+        <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 animate-pulse"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        </div>
+    </div>
+
+    <!-- 分类Tab栏 -->
+    <div id="categoryTabs" class="hidden mb-6 overflow-x-auto scrollbar-hide">
+        <div class="flex gap-1 sm:gap-2 min-w-full">
+            <!-- 分类标签将通过JS动态生成 -->
+        </div>
+    </div>
+
+    <!-- 网站卡片网格 -->
+    <div id="siteGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 hidden">
+        <!-- 网站卡片将通过JS动态生成 -->
+    </div>
+
+    <!-- 无数据提示 -->
+    <div id="emptyState" class="hidden py-16 text-center">
+        <i class="fa fa-folder-open-o text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+        <p class="text-gray-500 dark:text-gray-400">暂无相关网站数据</p>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="mt-auto py-6 border-t border-gray-200 dark:border-gray-700">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>© 2026 Spring-_-Bear</p>
+    </div>
+</footer>
+
+<script>
+    // 全局数据存储
+    let siteData = {categories: [], sites: []};
+    let currentCategory = 'all';
+
+    // DOM元素获取
+    const elements = {
+        skeleton: document.getElementById('skeleton'),
+        categoryTabs: document.getElementById('categoryTabs'),
+        siteGrid: document.getElementById('siteGrid'),
+        emptyState: document.getElementById('emptyState'),
+        searchModal: document.getElementById('searchModal'),
+        searchInput: document.getElementById('searchInput'),
+        searchResults: document.getElementById('searchResults'),
+        searchBtn: document.getElementById('searchBtn'),
+        closeSearch: document.getElementById('closeSearch'),
+        themeToggle: document.getElementById('themeToggle')
+    };
+
+    // 初始化主题
+    (function initTheme() {
+        const isDark = localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+        }
+        // 同步切换按钮的图标显示状态
+        updateThemeIcon(isDark);
+    })();
+
+    // 切换主题（修复：同步更新图标）
+    elements.themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', isDark);
+        // 更新按钮图标
+        updateThemeIcon(isDark);
+    });
+
+    // 新增：统一更新主题图标状态的函数
+    function updateThemeIcon(isDark) {
+        const moonIcon = elements.themeToggle.querySelector('.fa-moon');
+        const sunIcon = elements.themeToggle.querySelector('.fa-sun');
+
+        if (isDark) {
+            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden');
+        } else {
+            moonIcon.classList.remove('hidden');
+            sunIcon.classList.add('hidden');
+        }
+    }
+
+    // 搜索模态框控制
+    function openSearch() {
+        elements.searchModal.classList.remove('hidden');
+        elements.searchInput.focus();
+    }
+
+    function closeSearch() {
+        elements.searchModal.classList.add('hidden');
+        elements.searchInput.value = '';
+        elements.searchResults.innerHTML = '<div class="text-center text-gray-400 py-10">输入关键词开始搜索</div>';
+    }
+
+    elements.searchBtn.addEventListener('click', openSearch);
+    elements.closeSearch.addEventListener('click', closeSearch);
+    elements.searchModal.addEventListener('click', (e) => e.target === elements.searchModal && closeSearch());
+
+    // 全局快捷键绑定
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openSearch();
+        }
+        if (e.key === 'Escape') closeSearch();
+    });
+
+    // 加载JSON数据
+    async function fetchSiteData() {
+        try {
+            const response = await fetch('./sites-nav.json');
+            if (!response.ok) throw new Error('数据加载失败');
+            siteData = await response.json();
+            renderCategories();
+            renderSites(currentCategory);
+            // 隐藏骨架屏，显示内容
+            elements.skeleton.classList.add('hidden');
+            elements.categoryTabs.classList.remove('hidden');
+            elements.siteGrid.classList.remove('hidden');
+        } catch (error) {
+            elements.skeleton.innerHTML = `<div class="text-center py-16 text-red-500">数据加载失败：${error.message}</div>`;
+            console.error(error);
+        }
+    }
+
+    // 渲染分类标签
+    function renderCategories() {
+        const tabContainer = elements.categoryTabs.querySelector('div');
+        // 全部标签
+        const allCount = siteData.sites.length;
+        tabContainer.innerHTML = `
+        <button data-category="all" class="tab-active px-4 py-2 whitespace-nowrap rounded-lg transition-colors">
+          全部 <span class="ml-1 px-1.5 text-xs bg-primary/10 text-primary rounded-full">${allCount}</span>
+        </button>
+      `;
+        // 动态生成分类
+        siteData.categories.forEach(category => {
+            const count = siteData.sites.filter(s => s.category === category.id).length;
+            const tab = document.createElement('button');
+            tab.dataset.category = category.id;
+            tab.className = 'px-4 py-2 whitespace-nowrap rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800';
+            tab.innerHTML = `
+          <i class="fa ${category.icon} mr-1"></i> ${category.name}
+          <span class="ml-1 px-1.5 text-xs bg-gray-200 dark:bg-gray-700 rounded-full">${count}</span>
+        `;
+            tabContainer.appendChild(tab);
+        });
+        // 绑定分类切换事件
+        tabContainer.querySelectorAll('button').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentCategory = tab.dataset.category;
+                // 切换激活样式
+                tabContainer.querySelectorAll('button').forEach(t => t.classList.remove('tab-active'));
+                tab.classList.add('tab-active');
+                renderSites(currentCategory);
+            });
+        });
+    }
+
+    // 更新网站访问次数到 localStorage
+    function updateVisitCount(siteId) {
+        const visitCounts = JSON.parse(localStorage.getItem('siteVisitCounts')) || {};
+        visitCounts[siteId] = (visitCounts[siteId] || 0) + 1;
+        localStorage.setItem('siteVisitCounts', JSON.stringify(visitCounts));
+    }
+
+    // 渲染网站卡片 ✅ 修复排序问题
+    function renderSites(categoryId) {
+        const grid = elements.siteGrid;
+        grid.innerHTML = '';
+        // 1. 过滤数据
+        let filteredSites = categoryId === 'all'
+            ? siteData.sites
+            : siteData.sites.filter(site => site.category === categoryId);
+
+        if (filteredSites.length === 0) {
+            elements.emptyState.classList.remove('hidden');
+            grid.classList.add('hidden');
+            return;
+        }
+        elements.emptyState.classList.add('hidden');
+        grid.classList.remove('hidden');
+
+        // ====================== 核心修复：按访问次数 & 分类配置顺序排序 ======================
+        // 创建分类顺序映射表（严格对应你categories数组的顺序）
+        const categorySortMap = {};
+        siteData.categories.forEach((category, index) => {
+            categorySortMap[category.id] = index;
+        });
+
+        // 获取本地访问计数
+        const visitCounts = JSON.parse(localStorage.getItem('siteVisitCounts')) || {};
+        // 按访问次数逆序，次数相同按分类顺序
+        filteredSites.sort((siteA, siteB) => {
+            const countA = visitCounts[siteA.id] || 0;
+            const countB = visitCounts[siteB.id] || 0;
+            // 优先按访问次数逆序
+            if (countB !== countA) {
+                return countB - countA;
+            }
+            // 次数相同时按分类顺序
+            const indexA = categorySortMap[siteA.category] ?? 999;
+            const indexB = categorySortMap[siteB.category] ?? 999;
+            return indexA - indexB;
+        });
+        // ========================================================================
+
+        // 生成卡片
+        filteredSites.forEach(site => {
+            const card = document.createElement('a');
+            card.href = site.url;
+            card.target = '_blank';
+            card.rel = 'noopener noreferrer';
+            card.className = 'relative bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 card-hover flex flex-col gap-3';
+            card.innerHTML = `
+          <span class="absolute top-2 right-2 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">${visitCounts[site.id] || 0}</span>
+          <div class="flex items-center gap-3">
+            <img
+              src="${site.icon || `https://favicon.im/${new URL(site.url).host}`}"
+              alt="${site.name}"
+              class="w-10 h-10 rounded-lg object-cover"
+              onerror="this.src='https://picsum.photos/40/40?random=${site.name}'"
+            >
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium truncate">${site.name}</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${site.description || site.title}</p>
+            </div>
+          </div>
+        `;
+            card.addEventListener('click', () => {
+                updateVisitCount(site.id);
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    // 搜索功能
+    elements.searchInput.addEventListener('input', (e) => {
+        const keyword = e.target.value.trim().toLowerCase();
+        if (!keyword) {
+            elements.searchResults.innerHTML = '<div class="text-center text-gray-400 py-10">输入关键词开始搜索</div>';
+            return;
+        }
+        // 模糊搜索
+        const results = siteData.sites.filter(site =>
+            site.name.toLowerCase().includes(keyword) ||
+            (site.title && site.title.toLowerCase().includes(keyword)) ||
+            (site.description && site.description.toLowerCase().includes(keyword) ||
+                (site.url && site.url.toLowerCase().includes(keyword)))
+        );
+        // 渲染结果
+        if (results.length === 0) {
+            elements.searchResults.innerHTML = '<div class="text-center text-gray-400 py-6">未找到相关网站</div>';
+            return;
+        }
+        elements.searchResults.innerHTML = results.map(item => `
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer"
+          onclick="updateVisitCount(${item.id})"
+          class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <img src="${item.icon || `https://favicon.im/${new URL(item.url).host}`}"
+               class="w-8 h-8 rounded"
+               onerror="this.src='https://picsum.photos/32/32?random=${item.name}'">
+          <div class="flex-1 min-w-0">
+            <p class="font-medium truncate">${item.name}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${item.title || item.description}</p>
+          </div>
+        </a>
+      `).join('');
+    });
+
+    // 初始化加载数据
+    window.addEventListener('DOMContentLoaded', fetchSiteData);
+</script>
+</body>
+</html>

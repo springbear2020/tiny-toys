@@ -1,0 +1,473 @@
+{
+  "categories": [
+    {
+      "id": "ai",
+      "name": "人工智能",
+      "icon": "fa-robot"
+    },
+    {
+      "id": "logon",
+      "name": "账号登录",
+      "icon": "fa-key"
+    },
+    {
+      "id": "dev",
+      "name": "开发工具",
+      "icon": "fa-code"
+    },
+    {
+      "id": "doc",
+      "name": "开源文档",
+      "icon": "fa-book-open"
+    },
+    {
+      "id": "design",
+      "name": "设计资源",
+      "icon": "fa-palette"
+    },
+    {
+      "id": "blogger",
+      "name": "宝藏博主",
+      "icon": "fa-star"
+    },
+    {
+      "id": "mine",
+      "name": "我的网址",
+      "icon": "fa-user"
+    }
+  ],
+  "sites": [
+    {
+      "id": 1,
+      "name": "豆包",
+      "title": "豆包 - 字节跳动旗下 AI 智能助手",
+      "url": "https://www.doubao.com/chat",
+      "icon": "./favicon/doubao.com.png",
+      "category": "ai"
+    },
+    {
+      "id": 2,
+      "name": "千问",
+      "title": "千问-阿里 AI 助手",
+      "url": "https://www.qianwen.com/",
+      "icon": "./favicon/qianwen.com.png",
+      "category": "ai"
+    },
+    {
+      "id": 3,
+      "name": "ChatGPT",
+      "title": "ChatGPT is your AI chatbot for everyday use",
+      "url": "https://chatgpt.com/",
+      "icon": "./favicon/chatgpt.com.ico",
+      "category": "ai"
+    },
+    {
+      "id": 4,
+      "name": "Gemini",
+      "title": "Meet Gemini, Google's AI assistant",
+      "url": "https://gemini.google.com/app",
+      "icon": "./favicon/gemini.google.com.svg",
+      "category": "ai"
+    },
+    {
+      "id": 5,
+      "name": "Hugging Face",
+      "title": "Hugging Face – The AI community building the future",
+      "url": "https://huggingface.co/",
+      "icon": "./favicon/huggingface.co.ico",
+      "category": "ai"
+    },
+    {
+      "id": 6,
+      "name": "JSON",
+      "title": "JSON在线解析格式化验证 - JSON.cn",
+      "url": "https://www.json.cn/?fullscreen",
+      "icon": "./favicon/json.cn.ico",
+      "category": "dev"
+    },
+    {
+      "id": 7,
+      "name": "JSON 格式化",
+      "title": "JSON 格式化 - 锤子在线工具",
+      "url": "https://www.toolhelper.cn/JSON/JSONFormat?type=1",
+      "icon": "./favicon/toolhelper.cn.ico",
+      "category": "dev"
+    },
+    {
+      "id": 8,
+      "name": "JSON 转义",
+      "title": "JSON 转义 - 锤子在线工具",
+      "url": "https://www.toolhelper.cn/JSON/JSONEscape",
+      "icon": "./favicon/toolhelper.cn.ico",
+      "category": "dev"
+    },
+    {
+      "id": 9,
+      "name": "MD5",
+      "title": "MD5 哈希 - 锤子在线工具",
+      "url": "https://www.toolhelper.cn/DigestAlgorithm/MD5",
+      "icon": "./favicon/toolhelper.cn.ico",
+      "category": "dev"
+    },
+    {
+      "id": 10,
+      "name": "URL 编解码",
+      "title": "URL 编码/解码 - 锤子在线工具",
+      "url": "https://www.toolhelper.cn/EncodeDecode/Url?type=1",
+      "icon": "./favicon/toolhelper.cn.ico",
+      "category": "dev"
+    },
+    {
+      "id": 11,
+      "name": "文本比对",
+      "title": "在线文本比对工具 | 菜鸟工具",
+      "url": "https://www.jyshare.com/front-end/8006/",
+      "icon": "./favicon/jyshare.com.ico",
+      "category": "dev"
+    },
+    {
+      "id": 12,
+      "name": "IP 归属地",
+      "title": "IP归属地查询 - 在线工具",
+      "url": "https://tool.lu/ip/",
+      "icon": "./favicon/tool.lu.ico",
+      "category": "dev"
+    },
+    {
+      "id": 13,
+      "name": "时间戳转换",
+      "title": "时间戳(Unix timestamp)转换工具 - 在线工具",
+      "url": "https://tool.lu/timestamp/",
+      "icon": "./favicon/tool.lu.ico",
+      "category": "dev"
+    },
+    {
+      "id": 14,
+      "name": "LaTex",
+      "title": "在线LaTeX公式编辑器-编辑器",
+      "url": "https://www.latexlive.com/",
+      "icon": "./favicon/latexlive.com.png",
+      "category": "dev"
+    },
+    {
+      "id": 15,
+      "name": "有道翻译",
+      "title": "有道翻译_文本、文档、网页、在线即时翻译",
+      "url": "https://fanyi.youdao.com/#/TextTranslate",
+      "icon": "./favicon/fanyi.youdao.com.png",
+      "category": "dev"
+    },
+    {
+      "id": 16,
+      "name": "谷歌翻译",
+      "title": "Google 翻译",
+      "url": "https://translate.google.com/?hl=zh-CN&sl=en&tl=zh-CN&op=translate",
+      "icon": "./favicon/translate.google.com.ico",
+      "category": "dev"
+    },
+    {
+      "id": 17,
+      "name": "BootCDN",
+      "title": "BootCDN - Bootstrap 中文网开源项目免费 CDN 加速服务 铂特优选",
+      "url": "https://www.bootcdn.cn/",
+      "icon": "./favicon/bootcdn.cn.ico",
+      "category": "dev"
+    },
+    {
+      "id": 18,
+      "name": "Gin",
+      "title": "Gin Web 框架 | Gin Web Framework",
+      "url": "https://gin-gonic.com/zh-cn/",
+      "icon": "./favicon/gin-gonic.com.ico",
+      "category": "doc"
+    },
+    {
+      "id": 19,
+      "name": "GORM",
+      "title": "GORM - The fantastic ORM library for Golang, aims to be developer friendly",
+      "url": "https://gorm.io/zh_CN/",
+      "icon": "./favicon/gorm.io.png",
+      "category": "doc"
+    },
+    {
+      "id": 20,
+      "name": "Hutool",
+      "title": "Hutool🍬一个功能丰富且易用的Java工具库",
+      "url": "https://hutool.cn/",
+      "icon": "./favicon/hutool.cn.ico",
+      "category": "doc"
+    },
+    {
+      "id": 21,
+      "name": "MyBatis-Plus",
+      "title": "MyBatis-Plus 🚀 为简化开发而生",
+      "url": "https://baomidou.com/",
+      "icon": "./favicon/baomidou.com.svg",
+      "category": "doc"
+    },
+    {
+      "id": 22,
+      "name": "Vant",
+      "title": "Vant 4 - 轻量、可定制的移动端 Vue UI 组件库",
+      "url": "https://vant-ui.github.io/vant/#/zh-CN",
+      "icon": "./favicon/vant-ui.github.io.png",
+      "category": "doc"
+    },
+    {
+      "id": 23,
+      "name": "Element Plus",
+      "title": "一个 Vue 3 UI 框架 | Element Plus",
+      "url": "https://element-plus.org/zh-CN/",
+      "icon": "./favicon/element-plus.org.svg",
+      "category": "doc"
+    },
+    {
+      "id": 24,
+      "name": "Ant Design Vue",
+      "title": "Ant Design Vue — 企业级Vue组件库",
+      "url": "https://www.antdv.com/docs/vue/introduce-cn",
+      "icon": "./favicon/antdv.com.ico",
+      "category": "doc"
+    },
+    {
+      "id": 25,
+      "name": "ECharts",
+      "title": "Apache ECharts",
+      "url": "https://echarts.apache.org/zh/index.html",
+      "icon": "./favicon/echarts.apache.org.png",
+      "category": "doc"
+    },
+    {
+      "id": 26,
+      "name": "SmartAdmin",
+      "title": "SmartAdmin | 1024创新实验室",
+      "url": "https://smartadmin.vip/",
+      "icon": "./favicon/smartadmin.vip.png",
+      "category": "doc"
+    },
+    {
+      "id": 27,
+      "name": "Gin-Vue-Admin",
+      "title": "gin-vue-admin | GVA 文档站",
+      "url": "https://www.gin-vue-admin.com/",
+      "icon": "./favicon/gin-vue-admin.com.png",
+      "category": "doc"
+    },
+    {
+      "id": 28,
+      "name": "CS-Notes",
+      "title": "CS-Notes 面试笔记",
+      "url": "https://cyc2018.xyz/",
+      "icon": "./favicon/cyc2018.xyz.png",
+      "category": "doc"
+    },
+    {
+      "id": 29,
+      "name": "JavaGuide",
+      "title": "JavaGuide（Java 面试 & 后端通用面试指南）",
+      "url": "https://javaguide.cn/",
+      "icon": "./favicon/javaguide.cn.ico",
+      "category": "doc"
+    },
+    {
+      "id": 30,
+      "name": "DrawIO",
+      "title": "draw.io - Security-first diagramming for teams",
+      "url": "https://www.drawio.com/",
+      "icon": "./favicon/drawio.com.ico",
+      "category": "design"
+    },
+    {
+      "id": 31,
+      "name": "Diagram",
+      "title": "在线序列图工具",
+      "url": "https://online.visual-paradigm.com/cn/diagrams/features/sequence-diagram-software/",
+      "icon": "./favicon/online.visual-paradigm.com.ico",
+      "category": "design"
+    },
+    {
+      "id": 32,
+      "name": "Pixabay",
+      "title": "6 million+ Stunning Free Images to Use Anywhere - Pixabay",
+      "url": "https://pixabay.com/",
+      "icon": "./favicon/pixabay.com.png",
+      "category": "design"
+    },
+    {
+      "id": 33,
+      "name": "ColorSpace",
+      "title": "ColorSpace - 配色方案生成器",
+      "url": "https://mycolor.space/",
+      "icon": "./favicon/mycolor.space.png",
+      "category": "design"
+    },
+    {
+      "id": 34,
+      "name": "阿里图标库",
+      "title": "iconfont-阿里巴巴矢量图标库",
+      "url": "https://www.iconfont.cn/",
+      "icon": "./favicon/iconfont.cn.png",
+      "category": "design"
+    },
+    {
+      "id": 35,
+      "name": "ProcessOn",
+      "title": "ProcessOn思维导图流程图-在线作图",
+      "url": "https://www.processon.com/",
+      "icon": "./favicon/processon.com.ico",
+      "category": "design"
+    },
+    {
+      "id": 36,
+      "name": "廖雪峰",
+      "title": "廖雪峰的官方网站",
+      "url": "https://liaoxuefeng.com/index.html",
+      "icon": "./favicon/liaoxuefeng.com.ico",
+      "category": "blogger"
+    },
+    {
+      "id": 37,
+      "name": "春天熊",
+      "title": "春天熊の知行录",
+      "url": "https://springbear.cn/",
+      "icon": "./favicon/springbear.cn.png",
+      "category": "blogger"
+    },
+    {
+      "id": 38,
+      "name": "CSDN",
+      "title": "CSDN博客-专业IT技术发表平台",
+      "url": "https://springbear.blog.csdn.net/",
+      "icon": "./favicon/springbear.blog.csdn.net.ico",
+      "category": "logon"
+    },
+    {
+      "id": 39,
+      "name": "GitHub",
+      "title": "GitHub · Change is constant. GitHub keeps you ahead. · GitHub",
+      "url": "https://github.com/",
+      "icon": "./favicon/github.com.png",
+      "category": "logon"
+    },
+    {
+      "id": 40,
+      "name": "语雀",
+      "title": "语雀，优秀的文档和知识库工具",
+      "url": "https://www.yuque.com/",
+      "icon": "./favicon/yuque.com.png",
+      "category": "logon"
+    },
+    {
+      "id": 41,
+      "name": "古文岛",
+      "title": "古文岛-原古诗文网",
+      "url": "https://www.gushiwen.cn/",
+      "icon": "./favicon/gushiwen.cn.ico",
+      "category": "logon"
+    },
+    {
+      "id": 42,
+      "name": "七牛云",
+      "title": "七牛云 | 一站式中立音视频云 + AI",
+      "url": "https://www.qiniu.com/",
+      "icon": "./favicon/qiniu.com.ico",
+      "category": "logon"
+    },
+    {
+      "id": 43,
+      "name": "阿里云",
+      "title": "阿里云-计算，为了无法计算的价值",
+      "url": "https://www.aliyun.com/",
+      "icon": "./favicon/aliyun.com.ico",
+      "category": "logon"
+    },
+    {
+      "id": 44,
+      "name": "哔哩哔哩",
+      "title": "哔哩哔哩 (゜-゜)つロ 干杯~-bilibili",
+      "url": "https://www.bilibili.com/",
+      "icon": "./favicon/bilibili.com.ico",
+      "category": "logon"
+    },
+    {
+      "id": 45,
+      "name": "超级简历",
+      "title": "超级简历WonderCV - AI智能简历制作工具",
+      "url": "https://www.wondercv.com/",
+      "icon": "./favicon/wondercv.com.ico",
+      "category": "logon"
+    },
+    {
+      "id": 46,
+      "name": "网易邮箱",
+      "title": "163网易免费邮-你的专业电子邮局",
+      "url": "https://mail.163.com/",
+      "icon": "./favicon/mail.163.com.ico",
+      "category": "logon"
+    },
+    {
+      "id": 47,
+      "name": "一隅",
+      "title": "静享管理之乐，安放数字生活",
+      "url": "https://mine.springbear.cn/",
+      "icon": "./favicon/mine.springbear.cn.ico",
+      "category": "mine"
+    },
+    {
+      "id": 48,
+      "name": "监控",
+      "title": "Full-stack observability for the agentic era | Grafana Labs | Grafana Labs",
+      "url": "https://monitor.springbear.cn/",
+      "icon": "./favicon/monitor.springbear.cn.ico",
+      "category": "mine"
+    },
+    {
+      "id": 49,
+      "name": "狗熊岭",
+      "title": "Bear Ridge",
+      "url": "https://static.springbear.cn/bear-ridge/",
+      "icon": "./favicon/bear.static.springbear.cn.ico",
+      "category": "mine"
+    },
+    {
+      "id": 50,
+      "name": "生日快乐",
+      "title": "Happy Birthday",
+      "url": "https://static.springbear.cn/happy-birthday/",
+      "icon": "./favicon/birthday.static.springbear.cn.ico",
+      "category": "mine"
+    },
+    {
+      "id": 51,
+      "name": "访客地图",
+      "title": "Visitor Map",
+      "url": "https://static.springbear.cn/visitor-map/",
+      "icon": "./favicon/visitor.static.springbear.cn.ico",
+      "category": "mine"
+    },
+    {
+      "id": 52,
+      "name": "草料二维码",
+      "title": "草料二维码生成器",
+      "url": "https://cli.im/",
+      "icon": "./favicon/cli.im.ico",
+      "category": "dev"
+    },
+    {
+      "id": 53,
+      "name": "力扣",
+      "title": "力扣 (LeetCode) 全球极客挚爱的技术成长平台",
+      "url": "https://leetcode.cn/",
+      "icon": "./favicon/leetcode.cn.ico",
+      "category": "logon"
+    },
+    {
+      "id": 54,
+      "name": "力扣 Top100",
+      "title": "力扣 Top100 刷题器",
+      "url": "https://static.springbear.cn/leetcode-top100/",
+      "icon": "./favicon/leetcode.cn.ico",
+      "category": "mine"
+    }
+  ]
+}

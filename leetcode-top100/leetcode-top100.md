@@ -25,3 +25,7 @@
 - 数据存储依赖浏览器 `localStorage`，清空浏览器缓存/切换浏览器会丢失刷题进度
 - 使用时需联网，以加载 `Tailwind CSS` 和 `Font Awesome` 外部资源
 - 仅为刷题辅助工具，题目链接跳转至 `LeetCode` 官网完成答题
+
+## 成品展示
+
+![](./leetcode-top100-demo.png)

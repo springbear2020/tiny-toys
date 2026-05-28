@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项 - 任务管理</title>
+    <link rel="icon" href="./todo-list.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        success: '#10b981',
+                        dark: '#0F172A',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'scale-up': 'scaleUp 0.2s ease-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'toast-in': 'toastIn 0.3s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {'0%': {opacity: '0'}, '100%': {opacity: '1'}},
+                        scaleUp: {'0%': {transform: 'scale(0.95)'}, '100%': {transform: 'scale(1)'}},
+                        slideIn: {
+                            '0%': {transform: 'translateY(-10px)', opacity: '0'},
+                            '100%': {transform: 'translateY(0)', opacity: '1'}
+                        },
+                        toastIn: {
+                            '0%': {transform: 'translateY(100%)', opacity: '0'},
+                            '100%': {transform: 'translateY(0)', opacity: '1'}
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:border-primary/20;
+            }
+
+            .tab-active {
+                @apply bg-primary/10 text-primary font-medium border-primary;
+            }
+
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            .theme-icon {
+                @apply transition-all duration-300 ease-in-out;
+            }
+
+            .drag-ghost {
+                @apply opacity-50 rotate-2 scale-95;
+            }
+
+            .drag-over {
+                @apply border-2 border-dashed border-primary bg-primary/5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light dark:bg-dark text-gray-800 dark:text-gray-200 min-h-screen flex flex-col transition-colors duration-300">
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-40 bg-white/90 dark:bg-dark/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 shrink-0">
+            <i class="fa-solid fa-list-check text-primary text-2xl"></i>
+            <h1 class="text-lg font-bold tracking-tight hidden sm:block">待办事项</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="searchBtn"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm">
+                <i class="fa fa-search text-gray-500 dark:text-gray-400"></i>
+                <span class="hidden sm:inline">搜索</span>
+                <kbd class="hidden md:inline px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">Ctrl+K</kbd>
+            </button>
+            <button id="addTaskBtn"
+                    class="flex items-center gap-1 px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm">
+                <i class="fa fa-plus"></i>
+                <span class="hidden sm:inline">新建任务</span>
+            </button>
+            <button id="themeToggle"
+                    class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0">
+                <i class="fa-solid fa-moon theme-icon dark:hidden text-gray-500"></i>
+                <i class="fa-solid fa-sun theme-icon hidden dark:inline text-yellow-400"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- ===== MAIN LAYOUT ===== -->
+<div class="flex-1 flex max-w-6xl mx-auto w-full">
+    <!-- Sidebar (desktop) -->
+    <aside id="sidebar"
+           class="hidden md:flex md:flex-col w-64 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-dark/50">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-500 dark:text-gray-400">总进度</span>
+                <span id="overallProgressText" class="font-medium">0/0</span>
+            </div>
+            <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div id="overallProgressBar" class="h-full bg-primary rounded-full transition-all duration-300"
+                     style="width: 0"></div>
+            </div>
+        </div>
+        <nav id="sidebarGroupList" class="flex-1 overflow-y-auto p-2 space-y-1"></nav>
+        <div class="p-3 border-t border-gray-200 dark:border-gray-700 space-y-1.5">
+            <button id="manageGroupsBtn"
+                    class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+                <i class="fa-solid fa-gear mr-2 text-gray-400"></i>管理分组
+            </button>
+            <button id="exportBtn"
+                    class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+                <i class="fa-solid fa-file-export mr-2 text-gray-400"></i>导出数据
+            </button>
+            <button id="importBtn"
+                    class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+                <i class="fa-solid fa-file-import mr-2 text-gray-400"></i>导入数据
+            </button>
+            <input id="importFileInput" type="file" accept=".json" class="hidden">
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 flex flex-col min-w-0">
+        <!-- Mobile group tabs -->
+        <div id="mobileGroupTabs"
+             class="md:hidden overflow-x-auto scrollbar-hide border-b border-gray-200 dark:border-gray-700">
+            <div class="flex gap-1 p-2 min-w-max"></div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="flex flex-wrap items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative flex-1 min-w-[160px]">
+                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input id="filterSearch" type="text" placeholder="搜索任务..."
+                       class="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary text-sm">
+            </div>
+            <select id="priorityFilter"
+                    class="px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary border-0">
+                <option value="all">全部优先级</option>
+                <option value="high">🔴 高优先级</option>
+                <option value="medium">🟡 中优先级</option>
+                <option value="low">🟢 低优先级</option>
+            </select>
+            <select id="sortBy"
+                    class="px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary border-0">
+                <option value="order">默认排序</option>
+                <option value="dueDate">截止日期</option>
+                <option value="priority">优先级</option>
+                <option value="createdAt">创建时间</option>
+            </select>
+            <label class="flex items-center gap-1.5 text-sm cursor-pointer whitespace-nowrap select-none">
+                <input type="checkbox" id="showCompletedToggle" checked class="rounded accent-primary">
+                <span class="text-gray-500 dark:text-gray-400">显示已完成</span>
+            </label>
+        </div>
+
+        <!-- Task list -->
+        <div id="taskList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center py-20 text-center">
+            <i class="fa-solid fa-clipboard-list text-5xl text-gray-300 dark:text-gray-600 mb-4"></i>
+            <p class="text-gray-500 dark:text-gray-400 mb-4" id="emptyStateText">暂无待办事项</p>
+            <button id="emptyAddBtn"
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                <i class="fa fa-plus mr-1"></i>新建任务
+            </button>
+        </div>
+    </main>
+</div>
+
+<!-- ===== SEARCH MODAL ===== -->
+<div id="searchModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+    <div class="container mx-auto px-4 pt-20 max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden animate-scale-up">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="relative">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input id="searchInput" type="text" placeholder="搜索任务标题、描述..."
+                           class="w-full pl-10 pr-10 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary">
+                    <button id="closeSearch"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="searchResults" class="max-h-[60vh] overflow-y-auto p-2 space-y-1">
+                <div class="text-center text-gray-400 py-10">输入关键词开始搜索</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TASK FORM MODAL ===== -->
+<div id="taskModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden animate-fade-in overflow-y-auto">
+    <div class="container mx-auto px-4 py-8 max-w-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden animate-scale-up">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 id="taskModalTitle" class="text-lg font-bold">新建任务</h2>
+                <button id="closeTaskModal"
+                        class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <i class="fa fa-times text-gray-400"></i>
+                </button>
+            </div>
+            <form id="taskForm" class="p-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">任务标题 <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="title" required placeholder="输入任务标题..." maxlength="100"
+                           class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">任务描述</label>
+                    <textarea name="description" rows="2" placeholder="补充任务详情（可选）..." maxlength="200"
+                              class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary resize-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">所属分组</label>
+                        <select name="groupId"
+                                class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary text-sm"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">优先级</label>
+                        <select name="priority"
+                                class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary text-sm">
+                            <option value="high">🔴 高</option>
+                            <option value="medium" selected>🟡 中</option>
+                            <option value="low">🟢 低</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">截止日期</label>
+                        <input type="date" name="dueDate"
+                               class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">重复类型</label>
+                        <select name="recurring"
+                                class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary text-sm">
+                            <option value="">不重复</option>
+                            <option value="daily">每日</option>
+                            <option value="weekly">每周</option>
+                            <option value="monthly">每月</option>
+                            <option value="weekdays">工作日</option>
+                            <option value="weekends">周末</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">备注</label>
+                    <textarea name="notes" rows="2" placeholder="添加备注信息（可选）..." maxlength="200"
+                              class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary resize-none"></textarea>
+                </div>
+                <input type="hidden" name="taskId" value="">
+                <div class="flex gap-3 pt-2">
+                    <button type="submit"
+                            class="flex-1 bg-primary text-white py-2.5 rounded-lg hover:bg-primary/90 transition-colors font-medium">
+                        <i class="fa fa-check mr-1"></i>保存
+                    </button>
+                    <button type="button" id="deleteTaskBtn"
+                            class="hidden px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            title="删除任务">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== GROUP MANAGER MODAL ===== -->
+<div id="groupModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+    <div class="container mx-auto px-4 pt-20 max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden animate-scale-up">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 class="text-lg font-bold">管理分组</h2>
+                <button id="closeGroupModal"
+                        class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <i class="fa fa-times text-gray-400"></i>
+                </button>
+            </div>
+            <div id="groupManagerList" class="p-4 space-y-2 max-h-[40vh] overflow-y-auto"></div>
+            <div class="p-4 pt-0 border-t border-gray-200 dark:border-gray-700">
+                <form id="addGroupForm" class="flex gap-2">
+                    <div class="relative flex-1">
+                        <i id="groupIconPreview"
+                           class="fa-solid fa-folder absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" name="groupName" required placeholder="新分组名称..." maxlength="20"
+                               class="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg outline-none border-0 focus:ring-2 focus:ring-primary text-sm">
+                    </div>
+                    <input type="color" name="groupColor" value="#165DFF"
+                           class="w-10 h-10 rounded-lg cursor-pointer border-0 p-0.5 bg-gray-100 dark:bg-gray-700"
+                           title="选择颜色">
+                    <button type="submit"
+                            class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toastContainer"
+     class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="py-4 border-t border-gray-200 dark:border-gray-700">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>&copy; 2026 Spring-_-Bear</p>
+    </div>
+</footer>
+
+<script>
+    // ====================================================================
+    // 1. DEFAULT DATA
+    // ====================================================================
+    const DEFAULT_DATA = {
+        groups: [
+            {id: 'default', name: '默认', icon: 'fa-list-check', color: '#165DFF'}
+        ],
+        tasks: []
+    };
+
+    // ====================================================================
+    // 2. STORAGE
+    // ====================================================================
+    const Storage = {
+        KEYS: {TODO_DATA: 'todo_data', DARK_MODE: 'todoDarkMode'},
+
+        get(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            } catch (e) {
+                return null;
+            }
+        },
+
+        set(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+                showToast('存储空间不足，请清理部分数据');
+            }
+        },
+
+        loadData() {
+            const saved = this.get(this.KEYS.TODO_DATA);
+            if (saved && saved.groups && Array.isArray(saved.tasks)) return saved;
+            const initial = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            this.set(this.KEYS.TODO_DATA, initial);
+            return initial;
+        },
+
+        saveData(data) {
+            this.set(this.KEYS.TODO_DATA, data);
+        }
+    };
+
+    // ====================================================================
+    // 3. APP STATE
+    // ====================================================================
+    let appData = null;
+    let currentGroup = 'all';
+    let filters = {search: '', priority: 'all', sortBy: 'order', showCompleted: true};
+    let editingTaskId = null;
+    let nextTaskId = 1;
+
+    // ====================================================================
+    // 4. DOM REFS
+    // ====================================================================
+    const $ = (id) => document.getElementById(id);
+    const el = {
+        searchBtn: $('searchBtn'),
+        addTaskBtn: $('addTaskBtn'),
+        themeToggle: $('themeToggle'),
+        sidebar: $('sidebar'),
+        overallProgressBar: $('overallProgressBar'),
+        overallProgressText: $('overallProgressText'),
+        sidebarGroupList: $('sidebarGroupList'),
+        manageGroupsBtn: $('manageGroupsBtn'),
+        exportBtn: $('exportBtn'),
+        importBtn: $('importBtn'),
+        importFileInput: $('importFileInput'),
+        mobileGroupTabs: $('mobileGroupTabs'),
+        filterSearch: $('filterSearch'),
+        priorityFilter: $('priorityFilter'),
+        sortBy: $('sortBy'),
+        showCompletedToggle: $('showCompletedToggle'),
+        taskList: $('taskList'),
+        emptyState: $('emptyState'),
+        emptyStateText: $('emptyStateText'),
+        emptyAddBtn: $('emptyAddBtn'),
+        searchModal: $('searchModal'),
+        searchInput: $('searchInput'),
+        searchResults: $('searchResults'),
+        closeSearch: $('closeSearch'),
+        taskModal: $('taskModal'),
+        taskModalTitle: $('taskModalTitle'),
+        taskForm: $('taskForm'),
+        closeTaskModal: $('closeTaskModal'),
+        deleteTaskBtn: $('deleteTaskBtn'),
+        groupModal: $('groupModal'),
+        groupManagerList: $('groupManagerList'),
+        closeGroupModal: $('closeGroupModal'),
+        addGroupForm: $('addGroupForm'),
+        toastContainer: $('toastContainer')
+    };
+
+    // ====================================================================
+    // 5. THEME
+    // ====================================================================
+    (function initTheme() {
+        const saved = localStorage.getItem(Storage.KEYS.DARK_MODE);
+        const isDark = saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+        updateThemeIcon(isDark);
+    })();
+
+    function updateThemeIcon(isDark) {
+        const moon = el.themeToggle.querySelector('.fa-moon');
+        const sun = el.themeToggle.querySelector('.fa-sun');
+        if (isDark) {
+            moon.classList.add('hidden');
+            sun.classList.remove('hidden');
+        } else {
+            moon.classList.remove('hidden');
+            sun.classList.add('hidden');
+        }
+    }
+
+    el.themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem(Storage.KEYS.DARK_MODE, isDark);
+        updateThemeIcon(isDark);
+    });
+
+    // ====================================================================
+    // 6. UTILITIES
+    // ====================================================================
+    function generateId() {
+        const maxId = appData.tasks.reduce((max, t) => Math.max(max, t.id || 0), 0);
+        return Math.max(nextTaskId, maxId + 1);
+    }
+
+    function getGroupById(id) {
+        return appData.groups.find(g => g.id === id);
+    }
+
+    function getToday() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        return `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+    }
+
+    function isOverdue(dateStr) {
+        return dateStr && dateStr < getToday();
+    }
+
+    function isToday(dateStr) {
+        return dateStr === getToday();
+    }
+
+    function isTomorrow(dateStr) {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return dateStr === d.toISOString().split('T')[0];
+    }
+
+    function getPriorityConfig(priority) {
+        const configs = {
+            high: {
+                label: '高',
+                textColor: 'text-red-600 dark:text-red-400',
+                bg: 'bg-red-50 dark:bg-red-900/20',
+                border: 'border-l-red-500',
+                dot: 'bg-red-500'
+            },
+            medium: {
+                label: '中',
+                textColor: 'text-yellow-600 dark:text-yellow-400',
+                bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+                border: 'border-l-yellow-500',
+                dot: 'bg-yellow-500'
+            },
+            low: {
+                label: '低',
+                textColor: 'text-green-600 dark:text-green-400',
+                bg: 'bg-green-50 dark:bg-green-900/20',
+                border: 'border-l-green-500',
+                dot: 'bg-green-500'
+            }
+        };
+        return configs[priority] || configs.medium;
+    }
+
+    function getRecurringLabel(type) {
+        const labels = {daily: '每日', weekly: '每周', monthly: '每月', weekdays: '工作日', weekends: '周末'};
+        return labels[type] || '';
+    }
+
+    function computeNextDueDate(currentDateStr, recurringType) {
+        if (!currentDateStr || !recurringType) return currentDateStr;
+        const parts = currentDateStr.split('-');
+        const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        switch (recurringType) {
+            case 'daily':
+                date.setDate(date.getDate() + 1);
+                break;
+            case 'weekly':
+                date.setDate(date.getDate() + 7);
+                break;
+            case 'monthly':
+                date.setMonth(date.getMonth() + 1);
+                break;
+            case 'weekdays':
+                do {
+                    date.setDate(date.getDate() + 1);
+                } while (date.getDay() === 0 || date.getDay() === 6);
+                break;
+            case 'weekends':
+                do {
+                    date.setDate(date.getDate() + 1);
+                } while (date.getDay() !== 0 && date.getDay() !== 6);
+                break;
+        }
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    // ====================================================================
+    // 7. DATA OPERATIONS
+    // ====================================================================
+    function getGroupProgress(groupId) {
+        const tasks = groupId === 'all' ? appData.tasks : appData.tasks.filter(t => t.groupId === groupId);
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.completed).length;
+        return {total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0};
+    }
+
+    function getFilteredTasks() {
+        let tasks = [...appData.tasks];
+        if (currentGroup !== 'all') tasks = tasks.filter(t => t.groupId === currentGroup);
+        const keyword = filters.search.trim().toLowerCase();
+        if (keyword) {
+            tasks = tasks.filter(t =>
+                t.title.toLowerCase().includes(keyword) ||
+                (t.description && t.description.toLowerCase().includes(keyword))
+            );
+        }
+        if (filters.priority !== 'all') tasks = tasks.filter(t => t.priority === filters.priority);
+        if (!filters.showCompleted) tasks = tasks.filter(t => !t.completed);
+
+        tasks.sort((a, b) => {
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            if (!a.completed) {
+                switch (filters.sortBy) {
+                    case 'dueDate':
+                        if (!a.dueDate && !b.dueDate) return a.order - b.order;
+                        if (!a.dueDate) return 1;
+                        if (!b.dueDate) return -1;
+                        return a.dueDate.localeCompare(b.dueDate);
+                    case 'priority': {
+                        const pOrder = {high: 0, medium: 1, low: 2};
+                        const pa = pOrder[a.priority] ?? 1;
+                        const pb = pOrder[b.priority] ?? 1;
+                        return pa !== pb ? pa - pb : a.order - b.order;
+                    }
+                    case 'createdAt':
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    default:
+                        return a.order - b.order;
+                }
+            }
+            return new Date(b.completedAt) - new Date(a.completedAt);
+        });
+        return tasks;
+    }
+
+    // ====================================================================
+    // 8. RENDER: SIDEBAR & MOBILE TABS
+    // ====================================================================
+    function renderSidebar() {
+        const overall = getGroupProgress('all');
+        el.overallProgressBar.style.width = `${overall.percent}%`;
+        el.overallProgressText.textContent = `${overall.completed}/${overall.total}`;
+
+        let html = '';
+        // All tab
+        const allTasksCount = appData.tasks.filter(t => !t.completed).length;
+        html += `
+    <button data-group="all" class="w-full text-left px-3 py-2 rounded-lg transition-colors text-sm flex items-center gap-2 ${currentGroup === 'all' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}">
+      <i class="fa-solid fa-list w-4 text-center"></i>
+      <span class="flex-1">全部</span>
+      ${allTasksCount > 0 ? `<span class="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">${allTasksCount}</span>` : ''}
+    </button>`;
+
+        appData.groups.forEach(group => {
+            const tasks = appData.tasks.filter(t => t.groupId === group.id);
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const active = tasks.filter(t => !t.completed).length;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            html += `
+    <button data-group="${group.id}" class="w-full text-left px-3 py-2 rounded-lg transition-colors text-sm group ${currentGroup === group.id ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid ${group.icon} w-4 text-center" style="color:${group.color}"></i>
+        <span class="flex-1 truncate">${group.name}</span>
+        ${active > 0 ? `<span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700">${active}</span>` : ''}
+      </div>
+      ${total > 0 ? `<div class="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-1.5 overflow-hidden"><div class="h-full rounded-full transition-all duration-300" style="width:${pct}%;background:${group.color}"></div></div>` : ''}
+    </button>`;
+        });
+        el.sidebarGroupList.innerHTML = html;
+
+        el.sidebarGroupList.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentGroup = btn.dataset.group;
+                renderAll();
+            });
+        });
+    }
+
+    function renderMobileTabs() {
+        const container = el.mobileGroupTabs.querySelector('div');
+        let html = `<button data-group="all" class="px-3 py-1.5 whitespace-nowrap rounded-lg transition-colors text-sm flex-shrink-0 ${currentGroup === 'all' ? 'tab-active bg-primary/10' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}">全部</button>`;
+        appData.groups.forEach(group => {
+            html += `<button data-group="${group.id}" class="px-3 py-1.5 whitespace-nowrap rounded-lg transition-colors text-sm flex-shrink-0 flex items-center gap-1 ${currentGroup === group.id ? 'tab-active bg-primary/10' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"><i class="fa-solid ${group.icon} text-xs" style="color:${group.color}"></i>${group.name}</button>`;
+        });
+        container.innerHTML = html;
+        container.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentGroup = btn.dataset.group;
+                renderAll();
+            });
+        });
+    }
+
+    // ====================================================================
+    // 9. RENDER: TASK LIST
+    // ====================================================================
+    function renderTaskList() {
+        const tasks = getFilteredTasks();
+        el.taskList.innerHTML = '';
+
+        if (tasks.length === 0) {
+            el.emptyState.classList.remove('hidden');
+            el.taskList.classList.add('hidden');
+            el.emptyStateText.textContent = filters.search ? '未找到匹配的任务' : '暂无待办事项';
+            return;
+        }
+        el.emptyState.classList.add('hidden');
+        el.taskList.classList.remove('hidden');
+
+        tasks.forEach(task => {
+            const card = createTaskCard(task);
+            el.taskList.appendChild(card);
+        });
+
+        initDragDrop();
+        initTouchDrag();
+    }
+
+    function createTaskCard(task) {
+        const card = document.createElement('div');
+        const pCfg = getPriorityConfig(task.priority);
+        const overdue = !task.completed && task.dueDate && isOverdue(task.dueDate);
+
+        card.className = `bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 ${pCfg.border} card-hover transition-all duration-200 ${task.completed ? 'opacity-60' : ''}`;
+        card.dataset.taskId = task.id;
+        card.draggable = true;
+
+        const recurringLabel = getRecurringLabel(task.recurring);
+        const group = getGroupById(task.groupId);
+        let dateHtml = '';
+        if (task.dueDate) {
+            if (overdue) {
+                dateHtml = `<span class="text-xs text-red-500 font-medium flex items-center gap-1"><i class="fa-solid fa-exclamation-circle"></i>逾期 ${formatDate(task.dueDate)}</span>`;
+            } else if (isToday(task.dueDate)) {
+                dateHtml = `<span class="text-xs text-amber-500 font-medium"><i class="fa-solid fa-clock mr-1"></i>今天</span>`;
+            } else if (isTomorrow(task.dueDate)) {
+                dateHtml = `<span class="text-xs text-blue-500"><i class="fa-solid fa-calendar-day mr-1"></i>明天</span>`;
+            } else {
+                dateHtml = `<span class="text-xs text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>${formatDate(task.dueDate)}</span>`;
+            }
+        }
+
+        card.innerHTML = `
+    <div class="p-3 flex items-start gap-3">
+      <button class="complete-btn mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${task.completed ? 'bg-success border-success' : 'border-gray-300 dark:border-gray-500 hover:border-primary'}" title="${task.completed ? '取消完成' : '标记完成'}">
+        ${task.completed ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
+      </button>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-medium text-sm truncate ${task.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}">${escapeHtml(task.title)}</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-full ${pCfg.textColor} ${pCfg.bg} shrink-0">${pCfg.label}</span>
+          ${recurringLabel ? `<span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 shrink-0"><i class="fa-solid fa-rotate mr-0.5"></i>${recurringLabel}</span>` : ''}
+          ${group ? `<span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shrink-0"><i class="fa-solid ${group.icon} mr-0.5" style="color:${group.color}"></i>${group.name}</span>` : ''}
+        </div>
+        ${task.description ? `<p class="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-2 ${task.completed ? 'line-through' : ''}">${escapeHtml(task.description)}</p>` : ''}
+        <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+          ${dateHtml}
+          ${task.notes ? `<span class="text-xs text-gray-400"><i class="fa-regular fa-note-sticky mr-0.5"></i>${escapeHtml(task.notes)}</span>` : ''}
+          ${task.completed && task.completedAt ? `<span class="text-xs text-gray-400"><i class="fa-regular fa-circle-check mr-0.5"></i>${new Date(task.completedAt).toLocaleString()}</span>` : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button class="edit-btn p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-400 hover:text-primary" title="编辑">
+          <i class="fa-solid fa-pen-to-square text-xs"></i>
+        </button>
+        <button class="drag-handle p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-grab active:cursor-grabbing" title="拖动排序">
+          <i class="fa-solid fa-grip-vertical text-xs"></i>
+        </button>
+      </div>
+    </div>`;
+
+        // Event bindings
+        card.querySelector('.complete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleComplete(task.id);
+        });
+        card.querySelector('.edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openTaskModal(task.id);
+        });
+
+        return card;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // ====================================================================
+    // 10. TASK CRUD
+    // ====================================================================
+    function toggleComplete(taskId) {
+        const task = appData.tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        if (!task.completed) {
+            if (task.recurring) {
+                const newDate = computeNextDueDate(task.dueDate, task.recurring);
+                task.lastCompletedAt = new Date().toISOString();
+                task.dueDate = newDate;
+                task.completed = false;
+                task.completedAt = null;
+                showToast(`<i class="fa-solid fa-rotate mr-1"></i>重复任务已延续至 ${formatDate(newDate)}`);
+            } else {
+                task.completed = true;
+                task.completedAt = new Date().toISOString();
+                showToast('<i class="fa-solid fa-circle-check mr-1"></i>任务已完成');
+            }
+        } else {
+            task.completed = false;
+            task.completedAt = null;
+            showToast('<i class="fa-solid fa-undo mr-1"></i>已撤销完成');
+        }
+
+        Storage.saveData(appData);
+        nextTaskId = Math.max(nextTaskId, ...appData.tasks.map(t => t.id)) + 1;
+        renderAll();
+    }
+
+    function openTaskModal(taskId) {
+        editingTaskId = taskId;
+        const form = el.taskForm;
+        form.reset();
+
+        // Populate group dropdown
+        const groupSelect = form.querySelector('[name="groupId"]');
+        groupSelect.innerHTML = appData.groups.map(g =>
+            `<option value="${g.id}"><i class="fa-solid ${g.icon}"></i> ${g.name}</option>`
+        ).join('');
+
+        if (taskId) {
+            const task = appData.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            el.taskModalTitle.textContent = '编辑任务';
+            form.querySelector('[name="title"]').value = task.title;
+            form.querySelector('[name="description"]').value = task.description || '';
+            form.querySelector('[name="groupId"]').value = task.groupId;
+            form.querySelector('[name="priority"]').value = task.priority;
+            form.querySelector('[name="dueDate"]').value = task.dueDate || '';
+            form.querySelector('[name="recurring"]').value = task.recurring || '';
+            form.querySelector('[name="notes"]').value = task.notes || '';
+            form.querySelector('[name="taskId"]').value = taskId;
+            el.deleteTaskBtn.classList.remove('hidden');
+        } else {
+            el.taskModalTitle.textContent = '新建任务';
+            if (appData.groups.length > 0) form.querySelector('[name="groupId"]').value = currentGroup !== 'all' ? currentGroup : appData.groups[0].id;
+            form.querySelector('[name="taskId"]').value = '';
+            el.deleteTaskBtn.classList.add('hidden');
+        }
+
+        el.taskModal.classList.remove('hidden');
+        form.querySelector('[name="title"]').focus();
+    }
+
+    function closeTaskModal() {
+        el.taskModal.classList.add('hidden');
+        editingTaskId = null;
+        el.taskForm.reset();
+    }
+
+    function saveTaskFromForm() {
+        const form = el.taskForm;
+        const title = form.querySelector('[name="title"]').value.trim();
+        if (!title) {
+            showToast('请输入任务标题');
+            return;
+        }
+
+        const taskData = {
+            title: title,
+            description: form.querySelector('[name="description"]').value.trim(),
+            groupId: form.querySelector('[name="groupId"]').value,
+            priority: form.querySelector('[name="priority"]').value,
+            dueDate: form.querySelector('[name="dueDate"]').value || null,
+            recurring: form.querySelector('[name="recurring"]').value || null,
+            notes: form.querySelector('[name="notes"]').value.trim()
+        };
+
+        const taskId = form.querySelector('[name="taskId"]').value;
+
+        if (taskId) {
+            const task = appData.tasks.find(t => t.id === parseInt(taskId));
+            if (task) {
+                Object.assign(task, taskData);
+            }
+        } else {
+            const maxOrder = Math.max(-1, ...appData.tasks.filter(t => !t.completed).map(t => t.order)) + 1;
+            const newTask = {
+                id: generateId(),
+                ...taskData,
+                completed: false,
+                completedAt: null,
+                order: maxOrder,
+                createdAt: new Date().toISOString()
+            };
+            appData.tasks.push(newTask);
+            nextTaskId = Math.max(nextTaskId, newTask.id) + 1;
+        }
+
+        Storage.saveData(appData);
+        nextTaskId = Math.max(nextTaskId, ...appData.tasks.map(t => t.id)) + 1;
+        closeTaskModal();
+        renderAll();
+        showToast(taskId ? '任务已更新' : '任务已创建');
+    }
+
+    function deleteTask(taskId) {
+        if (!confirm('确定要删除此任务吗？')) return;
+        appData.tasks = appData.tasks.filter(t => t.id !== taskId);
+        Storage.saveData(appData);
+        nextTaskId = Math.max(0, ...appData.tasks.map(t => t.id)) + 1;
+        closeTaskModal();
+        renderAll();
+        showToast('任务已删除');
+    }
+
+    // Task form submit
+    el.taskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveTaskFromForm();
+    });
+    el.closeTaskModal.addEventListener('click', closeTaskModal);
+    el.taskModal.addEventListener('click', (e) => {
+        if (e.target === el.taskModal) closeTaskModal();
+    });
+    el.deleteTaskBtn.addEventListener('click', () => {
+        const taskId = parseInt(el.taskForm.querySelector('[name="taskId"]').value);
+        if (taskId) deleteTask(taskId);
+    });
+
+    // ====================================================================
+    // 11. DRAG AND DROP
+    // ====================================================================
+    function initDragDrop() {
+        const cards = el.taskList.querySelectorAll('[draggable="true"]');
+        let dragTaskId = null;
+
+        cards.forEach(card => {
+            if (card.classList.contains('drag-init')) return;
+            card.classList.add('drag-init');
+
+            card.addEventListener('dragstart', (e) => {
+                const task = appData.tasks.find(t => t.id === parseInt(card.dataset.taskId));
+                if (task && task.completed) {
+                    e.preventDefault();
+                    return;
+                }
+                dragTaskId = parseInt(card.dataset.taskId);
+                card.classList.add('opacity-50', 'scale-95');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', card.dataset.taskId);
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('opacity-50', 'scale-95');
+                el.taskList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                dragTaskId = null;
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (parseInt(card.dataset.taskId) !== dragTaskId) {
+                    card.classList.add('drag-over');
+                }
+            });
+
+            card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                const targetId = parseInt(card.dataset.taskId);
+                if (targetId === dragTaskId || !dragTaskId) return;
+                reorderTasks(dragTaskId, targetId);
+            });
+        });
+    }
+
+    function initTouchDrag() {
+        let dragTaskId = null;
+        let ghost = null;
+        let startY = 0;
+        let currentY = 0;
+        let longPressTimer = null;
+        let isDragging = false;
+
+        el.taskList.addEventListener('touchstart', (e) => {
+            const handle = e.target.closest('.drag-handle');
+            if (!handle) return;
+            const card = handle.closest('[draggable="true"]');
+            if (!card) return;
+
+            const task = appData.tasks.find(t => t.id === parseInt(card.dataset.taskId));
+            if (task && task.completed) return;
+
+            const touch = e.touches[0];
+            startY = touch.clientY;
+            currentY = startY;
+            dragTaskId = parseInt(card.dataset.taskId);
+
+            longPressTimer = setTimeout(() => {
+                isDragging = true;
+                ghost = card.cloneNode(true);
+                ghost.style.position = 'fixed';
+                ghost.style.width = card.offsetWidth + 'px';
+                ghost.style.opacity = '0.85';
+                ghost.style.pointerEvents = 'none';
+                ghost.style.zIndex = '9999';
+                ghost.style.transform = 'rotate(2deg) scale(1.02)';
+                ghost.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2)';
+                ghost.style.left = card.getBoundingClientRect().left + 'px';
+                ghost.style.top = currentY + 'px';
+                document.body.appendChild(ghost);
+                card.classList.add('opacity-30');
+            }, 300);
+        }, {passive: true});
+
+        el.taskList.addEventListener('touchmove', (e) => {
+            if (!dragTaskId) return;
+            currentY = e.touches[0].clientY;
+
+            if (!isDragging && Math.abs(currentY - startY) > 10) {
+                clearTimeout(longPressTimer);
+                if (ghost) {
+                    ghost.remove();
+                    ghost = null;
+                }
+                dragTaskId = null;
+                return;
+            }
+
+            if (isDragging && ghost) {
+                e.preventDefault();
+                ghost.style.top = (currentY - ghost.offsetHeight / 2) + 'px';
+
+                const cards = el.taskList.querySelectorAll('[draggable="true"]:not(.opacity-30)');
+                cards.forEach(c => {
+                    const rect = c.getBoundingClientRect();
+                    if (currentY >= rect.top && currentY <= rect.bottom) {
+                        c.classList.add('drag-over');
+                    } else {
+                        c.classList.remove('drag-over');
+                    }
+                });
+            }
+        }, {passive: false});
+
+        el.taskList.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+            if (!dragTaskId) return;
+
+            if (isDragging && ghost) {
+                const cards = el.taskList.querySelectorAll('[draggable="true"]');
+                let targetId = null;
+                cards.forEach(c => {
+                    const rect = c.getBoundingClientRect();
+                    if (currentY >= rect.top && currentY <= rect.bottom && !c.classList.contains('opacity-30')) {
+                        targetId = parseInt(c.dataset.taskId);
+                    }
+                });
+                if (targetId && targetId !== dragTaskId) {
+                    reorderTasks(dragTaskId, targetId);
+                }
+            }
+
+            if (ghost) {
+                ghost.remove();
+                ghost = null;
+            }
+            el.taskList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            el.taskList.querySelectorAll('.opacity-30').forEach(el => el.classList.remove('opacity-30'));
+            dragTaskId = null;
+            isDragging = false;
+        });
+    }
+
+    function reorderTasks(sourceId, targetId) {
+        const incomplete = appData.tasks.filter(t => !t.completed);
+        const sourceIdx = incomplete.findIndex(t => t.id === sourceId);
+        const targetIdx = incomplete.findIndex(t => t.id === targetId);
+        if (sourceIdx === -1 || targetIdx === -1) return;
+
+        const [moved] = incomplete.splice(sourceIdx, 1);
+        incomplete.splice(targetIdx, 0, moved);
+        incomplete.forEach((task, idx) => {
+            const orig = appData.tasks.find(t => t.id === task.id);
+            if (orig) orig.order = idx;
+        });
+
+        Storage.saveData(appData);
+        renderAll();
+    }
+
+    // ====================================================================
+    // 12. SEARCH MODAL
+    // ====================================================================
+    function openSearchModal() {
+        el.searchModal.classList.remove('hidden');
+        el.searchInput.focus();
+    }
+
+    function closeSearchModal() {
+        el.searchModal.classList.add('hidden');
+        el.searchInput.value = '';
+        el.searchResults.innerHTML = '<div class="text-center text-gray-400 py-10">输入关键词开始搜索</div>';
+    }
+
+    el.searchBtn.addEventListener('click', openSearchModal);
+    el.closeSearch.addEventListener('click', closeSearchModal);
+    el.searchModal.addEventListener('click', (e) => {
+        if (e.target === el.searchModal) closeSearchModal();
+    });
+
+    el.searchInput.addEventListener('input', (e) => {
+        const keyword = e.target.value.trim().toLowerCase();
+        if (!keyword) {
+            el.searchResults.innerHTML = '<div class="text-center text-gray-400 py-10">输入关键词开始搜索</div>';
+            return;
+        }
+        const results = appData.tasks.filter(t =>
+            t.title.toLowerCase().includes(keyword) ||
+            (t.description && t.description.toLowerCase().includes(keyword)) ||
+            (t.notes && t.notes.toLowerCase().includes(keyword))
+        );
+
+        if (results.length === 0) {
+            el.searchResults.innerHTML = '<div class="text-center text-gray-400 py-6">未找到匹配的任务</div>';
+            return;
+        }
+
+        el.searchResults.innerHTML = results.map(task => {
+            const pCfg = getPriorityConfig(task.priority);
+            const group = getGroupById(task.groupId);
+            return `
+    <button data-task-id="${task.id}" class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-3">
+      <span class="text-sm ${task.completed ? 'line-through text-gray-400' : ''} flex-1 truncate">${escapeHtml(task.title)}</span>
+      <span class="text-xs px-1.5 py-0.5 rounded-full ${pCfg.textColor} ${pCfg.bg} shrink-0">${pCfg.label}</span>
+      ${group ? `<span class="text-xs text-gray-400 shrink-0"><i class="fa-solid ${group.icon} mr-0.5" style="color:${group.color}"></i>${group.name}</span>` : ''}
+      ${task.dueDate ? `<span class="text-xs ${isOverdue(task.dueDate) && !task.completed ? 'text-red-500' : 'text-gray-400'} shrink-0">${formatDate(task.dueDate)}</span>` : ''}
+    </button>`;
+        }).join('');
+
+        el.searchResults.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const taskId = parseInt(btn.dataset.taskId);
+                const task = appData.tasks.find(t => t.id === taskId);
+                if (task) {
+                    currentGroup = task.groupId;
+                    closeSearchModal();
+                    renderAll();
+                    setTimeout(() => {
+                        const card = el.taskList.querySelector(`[data-task-id="${taskId}"]`);
+                        if (card) {
+                            card.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            card.classList.add('ring-2', 'ring-primary');
+                            setTimeout(() => card.classList.remove('ring-2', 'ring-primary'), 2000);
+                        }
+                    }, 200);
+                }
+            });
+        });
+    });
+
+    // ====================================================================
+    // 13. GROUP MANAGER
+    // ====================================================================
+    function openGroupModal() {
+        el.groupModal.classList.remove('hidden');
+        renderGroupManager();
+    }
+
+    function closeGroupModal() {
+        el.groupModal.classList.add('hidden');
+    }
+
+    el.manageGroupsBtn.addEventListener('click', openGroupModal);
+    el.closeGroupModal.addEventListener('click', closeGroupModal);
+    el.groupModal.addEventListener('click', (e) => {
+        if (e.target === el.groupModal) closeGroupModal();
+    });
+
+    function renderGroupManager() {
+        el.groupManagerList.innerHTML = appData.groups.map((group, idx) => {
+            const taskCount = appData.tasks.filter(t => t.groupId === group.id).length;
+            return `
+    <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
+      <i class="fa-solid ${group.icon} w-5 text-center" style="color:${group.color}"></i>
+      <span class="flex-1 text-sm truncate">${group.name}</span>
+      <span class="text-xs text-gray-400">${taskCount} 个任务</span>
+      <button class="edit-group-btn p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" data-idx="${idx}" title="编辑">
+        <i class="fa-solid fa-pen-to-square text-xs text-gray-400 hover:text-primary"></i>
+      </button>
+      <button class="del-group-btn p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" data-id="${group.id}" title="删除">
+        <i class="fa-solid fa-trash text-xs text-gray-400 hover:text-red-500"></i>
+      </button>
+    </div>`;
+        }).join('');
+
+        el.groupManagerList.querySelectorAll('.del-group-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const groupId = btn.dataset.id;
+                if (appData.groups.length <= 1) {
+                    showToast('至少保留一个分组');
+                    return;
+                }
+                const taskCount = appData.tasks.filter(t => t.groupId === groupId).length;
+                const msg = taskCount > 0
+                    ? `该分组下有 ${taskCount} 个任务，删除后这些任务将移至第一个分组。确定删除吗？`
+                    : '确定要删除此分组吗？';
+                if (!confirm(msg)) return;
+                const fallbackId = appData.groups.find(g => g.id !== groupId).id;
+                appData.tasks.forEach(t => {
+                    if (t.groupId === groupId) t.groupId = fallbackId;
+                });
+                appData.groups = appData.groups.filter(g => g.id !== groupId);
+                if (currentGroup === groupId) currentGroup = 'all';
+                Storage.saveData(appData);
+                renderGroupManager();
+                renderAll();
+                showToast('分组已删除');
+            });
+        });
+
+        el.groupManagerList.querySelectorAll('.edit-group-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx);
+                const group = appData.groups[idx];
+                const newName = prompt('编辑分组名称：', group.name);
+                if (newName && newName.trim()) {
+                    group.name = newName.trim();
+                    Storage.saveData(appData);
+                    renderGroupManager();
+                    renderAll();
+                }
+            });
+        });
+    }
+
+    el.addGroupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nameInput = el.addGroupForm.querySelector('[name="groupName"]');
+        const colorInput = el.addGroupForm.querySelector('[name="groupColor"]');
+        const name = nameInput.value.trim();
+        if (!name) return;
+
+        const id = 'group_' + Date.now();
+        const icons = ['fa-briefcase', 'fa-user', 'fa-book', 'fa-heart', 'fa-wallet', 'fa-star', 'fa-home', 'fa-graduation-cap', 'fa-plane', 'fa-music', 'fa-gamepad', 'fa-shopping-cart', 'fa-utensils', 'fa-car', 'fa-paw'];
+        const icon = icons[Math.floor(Math.random() * icons.length)];
+
+        appData.groups.push({id, name, icon, color: colorInput.value});
+        Storage.saveData(appData);
+        nameInput.value = '';
+        renderGroupManager();
+        renderAll();
+        showToast('分组已添加');
+    });
+
+    // ====================================================================
+    // 14. EXPORT / IMPORT
+    // ====================================================================
+    el.exportBtn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify({
+            groups: appData.groups,
+            tasks: appData.tasks
+        }, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `todo-backup-${getToday()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('数据已导出');
+    });
+
+    el.importBtn.addEventListener('click', () => el.importFileInput.click());
+
+    el.importFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!data.groups || !Array.isArray(data.tasks)) throw new Error('数据格式无效');
+                if (!confirm(`即将导入 ${data.groups.length} 个分组和 ${data.tasks.length} 个任务，覆盖当前数据。确定继续吗？`)) return;
+                Storage.saveData({groups: data.groups, tasks: data.tasks});
+                loadDataAndRender();
+                showToast('数据导入成功');
+            } catch (err) {
+                alert('文件解析失败：' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    // ====================================================================
+    // 15. FILTERS
+    // ====================================================================
+    el.filterSearch.addEventListener('input', () => {
+        filters.search = el.filterSearch.value;
+        renderTaskList();
+    });
+
+    el.priorityFilter.addEventListener('change', () => {
+        filters.priority = el.priorityFilter.value;
+        renderTaskList();
+    });
+
+    el.sortBy.addEventListener('change', () => {
+        filters.sortBy = el.sortBy.value;
+        renderTaskList();
+    });
+
+    el.showCompletedToggle.addEventListener('change', () => {
+        filters.showCompleted = el.showCompletedToggle.checked;
+        renderTaskList();
+    });
+
+    // ====================================================================
+    // 16. TOAST
+    // ====================================================================
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-4 py-2.5 rounded-xl shadow-lg text-sm pointer-events-auto animate-toast-in flex items-center';
+        toast.innerHTML = message;
+        el.toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(100%)';
+            toast.style.transition = 'all 0.3s ease-in';
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+
+    // ====================================================================
+    // 17. KEYBOARD SHORTCUTS
+    // ====================================================================
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openSearchModal();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            openTaskModal(null);
+        }
+        if (e.key === 'Escape') {
+            closeSearchModal();
+            closeTaskModal();
+            closeGroupModal();
+        }
+    });
+
+    // ====================================================================
+    // 18. INIT
+    // ====================================================================
+    function loadDataAndRender() {
+        appData = Storage.loadData();
+        nextTaskId = Math.max(0, ...appData.tasks.map(t => t.id)) + 1;
+        renderAll();
+    }
+
+    function renderAll() {
+        renderSidebar();
+        renderMobileTabs();
+        renderTaskList();
+    }
+
+    function initApp() {
+        loadDataAndRender();
+        el.addTaskBtn.addEventListener('click', () => openTaskModal(null));
+        el.emptyAddBtn.addEventListener('click', () => openTaskModal(null));
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>

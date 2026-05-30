@@ -1,6 +1,9 @@
 <template>
-  <article
-    class="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 backface-hidden transform-gpu [-webkit-mask-image:-webkit-radial-gradient(white,black)]"
+  <a
+    :href="book.link"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="group block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 backface-hidden transform-gpu [-webkit-mask-image:-webkit-radial-gradient(white,black)]"
   >
     <!-- Cover -->
     <div
@@ -62,7 +65,7 @@
         <span>{{ formatDate(book.firstCompletion) }}</span>
       </div>
     </div>
-  </article>
+  </a>
 </template>
 
 <script setup>

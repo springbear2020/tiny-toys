@@ -23,5 +23,5 @@ import InfiniteSection from "@/components/InfiniteSection.vue";
 import BlogCard from "@/components/card/BlogCard.vue";
 import BlogSkeleton from "@/components/skeleton/BlogSkeleton.vue";
 
-const pageSize = 12;
+const pageSize = 4 * 3;
 </script>

@@ -14,10 +14,10 @@ export default defineConfig({
   root: "./",
   server: {
     proxy: {
-      "/api/self-hub": {
+      "/self-hub": {
         target: "http://localhost:8888",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/self-hub/, ""),
+        rewrite: (path) => path.replace(/^\/self-hub/, ""),
       },
     },
   },

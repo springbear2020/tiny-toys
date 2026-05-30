@@ -28,6 +28,24 @@ const menus = [
       icon: "fa-solid fa-book-open",
     },
   },
+  {
+    path: "/sentences",
+    name: "Sentence",
+    component: () => import("@/views/sentence/index.vue"),
+    meta: {
+      title: "三五七言",
+      icon: "fa-solid fa-feather",
+    },
+  },
+  {
+    path: "/archives",
+    name: "Archive",
+    component: () => import("@/views/archive/index.vue"),
+    meta: {
+      title: "电子文藏",
+      icon: "fa-solid fa-archive",
+    },
+  },
 ];
 
 const routes = [

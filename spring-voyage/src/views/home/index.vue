@@ -107,6 +107,44 @@
           <!-- Explore -->
           <div class="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
+              href="https://static.springbear.cn/sites-nav/#/portfolio"
+              target="_blank"
+              class="group relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 px-5 py-4 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:border-sky-400/40 dark:hover:bg-sky-500/10"
+            >
+              <!-- glow -->
+              <div
+                class="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              >
+                <div
+                  class="absolute -inset-[120%] animate-[spin_8s_linear_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                />
+              </div>
+
+              <div class="relative flex items-center gap-4">
+                <!-- icon -->
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-lg transition-transform duration-300 group-hover:scale-105"
+                >
+                  <i class="fa-solid fa-compass text-base" />
+                </div>
+
+                <!-- content -->
+                <div class="min-w-0 flex-1">
+                  <div
+                    class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"
+                  >
+                    Portfolio
+                  </div>
+                </div>
+
+                <!-- arrow -->
+                <i
+                  class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-sky-500"
+                />
+              </div>
+            </a>
+
+            <a
               href="https://springbear.blog.csdn.net"
               target="_blank"
               class="group relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 px-5 py-4 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-red-300 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:border-red-400/40 dark:hover:bg-red-500/10"
@@ -134,12 +172,6 @@
                     class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"
                   >
                     CSDN
-
-                    <span
-                      class="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-500 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
-                    >
-                      技术博客
-                    </span>
                   </div>
                 </div>
 
@@ -178,12 +210,6 @@
                     class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"
                   >
                     GitHub
-
-                    <span
-                      class="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400"
-                    >
-                      开源项目
-                    </span>
                   </div>
                 </div>
 

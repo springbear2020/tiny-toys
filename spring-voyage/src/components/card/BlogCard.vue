@@ -22,9 +22,9 @@
 
       <div class="absolute right-4 top-4">
         <span
-          class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
         >
-          {{ dictStore.categoryMap[String(blog.categoryId)] }}
+          {{ dictStore.blogCategory[String(blog.categoryId)] }}
         </span>
       </div>
 
@@ -46,7 +46,7 @@
         {{ blog.title }}
       </h3>
 
-      <ProjectTech :technology="dictStore.tagMap[String(blog.tagId)]" />
+      <ProjectTech :technology="dictStore.blogTag[String(blog.tagId)]" />
 
       <!-- Footer -->
       <div

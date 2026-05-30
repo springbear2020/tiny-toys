@@ -12,6 +12,14 @@ export const getMineProjectsList = async (page, pageSize) => {
   return request.get("/mine/projects", { params: { page, pageSize } });
 };
 
+export const getMineSentencesList = async (page, pageSize) => {
+  return request.get("/mine/sentences", { params: { page, pageSize } });
+};
+
+export const getMineArchivesList = async (page, pageSize) => {
+  return request.get("/mine/archives", { params: { page, pageSize } });
+};
+
 export const searchMineResources = async (keyword) => {
   return request.get("/mine/resources", { params: { keyword } });
 };

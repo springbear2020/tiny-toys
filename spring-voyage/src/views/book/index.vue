@@ -23,5 +23,5 @@ import InfiniteSection from "@/components/InfiniteSection.vue";
 import BookCard from "@/components/card/BookCard.vue";
 import BookSkeleton from "@/components/skeleton/BookSkeleton.vue";
 
-const pageSize = 16;
+const pageSize = 4 * 4;
 </script>
